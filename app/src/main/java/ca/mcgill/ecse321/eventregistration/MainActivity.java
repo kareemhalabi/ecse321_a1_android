@@ -103,7 +103,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //TODO Register Button
+    public void register(View v) {
+        error = null;
+        EventRegistrationController erc = new EventRegistrationController();
+        Spinner participantSpinner = (Spinner) findViewById(R.id.participantspinner);
+        int selectedParticipant = participantSpinner.getSelectedItemPosition();
+        Spinner eventSpinner = (Spinner) findViewById(R.id.eventspinner);
+        int selectedEvent = eventSpinner.getSelectedItemPosition();
+        try {
+            erc.register(participants.get(selectedParticipant),events.get(selectedEvent));
+        } catch (InvalidInputException e) {
+            error = e.getMessage();
+        }
+        refreshData();
+    }
 
 
     public void addParticipant(View v) {
@@ -198,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             date = new Date(dft.parse(eventDate.getText().toString()).getTime());
         } catch (ParseException e) {
-            //TODO Possible Error Message?
+            error = "Date not formatted correctly!";
         }
 
         TextView startTime = (TextView) findViewById(R.id.newevent_starttime);
@@ -209,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
             start = new Time(tft.parse(startTime.getText().toString()).getTime());
             end = new Time(tft.parse(endTime.getText().toString()).getTime());
         } catch (ParseException e) {
-            //TODO Possible Error Message?
+            error = "Start/End time not formatted correctly!";
         }
 
         error = null;
