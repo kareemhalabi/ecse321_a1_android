@@ -109,10 +109,11 @@ public class MainActivity extends AppCompatActivity {
     public void addParticipant(View v) {
         TextView newParticipant = (TextView) findViewById(R.id.newparticipant_name);
         EventRegistrationController erc = new EventRegistrationController();
+        error = null;
         try {
             erc.createParticipant(newParticipant.getText().toString());
         } catch (InvalidInputException e) {
-            //TODO handle error
+            error = e.getMessage();
         }
 
         refreshData();
