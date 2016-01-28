@@ -23,6 +23,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/error_message"
+            android:id="@+id/errorMessage"
             android:textColor="#FF0000"/>
 
         <!-- Registration UI Elements -->

@@ -2,20 +2,19 @@ package ca.mcgill.ecse321.eventregistration;
 
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
+import java.sql.Time;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.sql.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -25,13 +24,13 @@ import ca.mcgill.ecse321.eventregistration.model.Event;
 import ca.mcgill.ecse321.eventregistration.model.Participant;
 import ca.mcgill.ecse321.eventregistration.model.RegistrationManager;
 import ca.mcgill.ecse321.eventregistration.persistence.PersistenceEventRegistration;
-import ca.mcgill.ecse321.eventregistration.persistence.PersistenceXStream;
 
 public class MainActivity extends AppCompatActivity {
 
     // data elements
     private HashMap<Integer, Participant> participants;
     private HashMap<Integer, Event> events;
+    private String error = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,89 +39,69 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
-
         PersistenceEventRegistration.setFileName(
                 Environment.getExternalStorageDirectory().getPath() + "/eventregistration.xml");
         PersistenceEventRegistration.loadEventRegistrationModel();
         refreshData();
-
     }
 
     private void refreshData() {
 
         RegistrationManager rm = RegistrationManager.getInstance();
 
-        TextView newParticipant = (TextView) findViewById(R.id.newparticipant_name);
-        newParticipant.setText("");
+        // error
+        TextView errorMessage = (TextView) findViewById(R.id.errorMessage);
+        errorMessage.setText(error);
 
-        TextView newEvent = (TextView) findViewById(R.id.newevent_name);
-        newEvent.setText("");
+        if (error == null || error.length() == 0) {
+            // Initialize the data in the participant spinner
+            Spinner participantSpinner = (Spinner) findViewById(R.id.participantspinner);
+            ArrayAdapter<CharSequence> participantAdapter = new
+                    ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);
+            participantAdapter.setDropDownViewResource(
+                    android.R.layout.simple_spinner_dropdown_item);
+            this.participants = new HashMap<Integer, Participant>();
 
-        // Initialize the data in the participant spinner
-        Spinner participantSpinner = (Spinner) findViewById(R.id.participantspinner);
-        ArrayAdapter<CharSequence> participantAdapter = new
-                ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);
-        participantAdapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item);
-        this.participants = new HashMap<Integer, Participant>();
+            int i = 0;
+            for (Iterator<Participant> participants = rm.getParticipants().iterator();
+                    participants.hasNext(); i++) {
+                Participant p = participants.next();
+                participantAdapter.add(p.getName());
+                this.participants.put(i,p);
+            }
+            participantSpinner.setAdapter(participantAdapter);
 
-        int i = 0;
-        for (Iterator<Participant> participants = rm.getParticipants().iterator();
-                participants.hasNext(); i++) {
-            Participant p = participants.next();
-            participantAdapter.add(p.getName());
-            this.participants.put(i,p);
+            // Initialize the data in the event spinner
+            Spinner eventSpinner = (Spinner) findViewById(R.id.eventspinner);
+            ArrayAdapter<CharSequence> eventAdapter = new
+                    ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);
+            eventAdapter.setDropDownViewResource(
+                    android.R.layout.simple_spinner_dropdown_item);
+            this.events = new HashMap<Integer, Event>();
+
+            i = 0;
+            for (Iterator<Event> events = rm.getEvents().iterator();
+                 events.hasNext(); i++) {
+                Event e = events.next();
+                eventAdapter.add(e.getName());
+                this.events.put(i,e);
+            }
+            eventSpinner.setAdapter(eventAdapter);
+
+            TextView newParticipant = (TextView) findViewById(R.id.newparticipant_name);
+            newParticipant.setText("");
+
+            TextView newEvent = (TextView) findViewById(R.id.newevent_name);
+            newEvent.setText("");
+
+            // Sets the date to the current day and the start/end times to the current time
+            Calendar c = Calendar.getInstance();
+            setDate(R.id.newevent_date, c.get(Calendar.DAY_OF_MONTH),
+                    c.get(Calendar.MONTH), c.get(Calendar.YEAR));
+            setTime(R.id.newevent_starttime, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE));
+            setTime(R.id.newevent_endtime, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE));
         }
-        participantSpinner.setAdapter(participantAdapter);
-
-        // Initialize the data in the event spinner
-        Spinner eventSpinner = (Spinner) findViewById(R.id.eventspinner);
-        ArrayAdapter<CharSequence> eventAdapter = new
-                ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);
-        eventAdapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item);
-        this.events = new HashMap<Integer, Event>();
-
-        i = 0;
-        for (Iterator<Event> events = rm.getEvents().iterator();
-             events.hasNext(); i++) {
-            Event e = events.next();
-            eventAdapter.add(e.getName());
-            this.events.put(i,e);
-        }
-        eventSpinner.setAdapter(eventAdapter);
     }
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_main, menu);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
-
 
     //TODO Register Button
 
@@ -211,13 +190,34 @@ public class MainActivity extends AppCompatActivity {
         EventRegistrationController erc = new EventRegistrationController();
 
         TextView eventName = (TextView) findViewById(R.id.newevent_name);
+
         TextView eventDate = (TextView) findViewById(R.id.newevent_date);
+        DateFormat dft = new SimpleDateFormat("dd-MM-yyyy");
+        Date date = null;
+        try {
+            date = new Date(dft.parse(eventDate.getText().toString()).getTime());
+        } catch (ParseException e) {
+            //TODO Possible Error Message?
+        }
 
-        Calendar calendar = Calendar.getInstance();
-        //calendar.setTime((Date) );
+        TextView startTime = (TextView) findViewById(R.id.newevent_starttime);
+        TextView endTime = (TextView) findViewById(R.id.newevent_endtime);
+        DateFormat tft = new SimpleDateFormat("HH:mm");
+        Time start = null, end = null;
+        try {
+            start = new Time(tft.parse(startTime.getText().toString()).getTime());
+            end = new Time(tft.parse(endTime.getText().toString()).getTime());
+        } catch (ParseException e) {
+            //TODO Possible Error Message?
+        }
 
-        //TODO finish arguments
-        //erc.createEvent(eventName.getText(), );
+        error = null;
+        try {
+            erc.createEvent(eventName.getText().toString(), date, start, end);
+        } catch (InvalidInputException e) {
+            error = e.getMessage();
+        }
+        refreshData();
     }
 
 
