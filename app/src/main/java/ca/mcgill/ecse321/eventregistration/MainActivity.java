@@ -39,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // Note that I needed to add the permission
+        // <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+        // to the AndroidManifest file
         PersistenceEventRegistration.setFileName(
                 Environment.getExternalStorageDirectory().getPath() + "/eventregistration.xml");
         PersistenceEventRegistration.loadEventRegistrationModel();
@@ -88,13 +91,16 @@ public class MainActivity extends AppCompatActivity {
             }
             eventSpinner.setAdapter(eventAdapter);
 
+            // Initialize participant text field
             TextView newParticipant = (TextView) findViewById(R.id.newparticipant_name);
             newParticipant.setText("");
 
+            // Initialize event name text field
             TextView newEvent = (TextView) findViewById(R.id.newevent_name);
             newEvent.setText("");
 
-            // Sets the date to the current day and the start/end times to the current time
+            // Sets the event date to the current day and
+            // the event start/end times to the current time
             Calendar c = Calendar.getInstance();
             setDate(R.id.newevent_date, c.get(Calendar.DAY_OF_MONTH),
                     c.get(Calendar.MONTH), c.get(Calendar.YEAR));
@@ -120,9 +126,9 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void addParticipant(View v) {
-        TextView newParticipant = (TextView) findViewById(R.id.newparticipant_name);
-        EventRegistrationController erc = new EventRegistrationController();
         error = null;
+        EventRegistrationController erc = new EventRegistrationController();
+        TextView newParticipant = (TextView) findViewById(R.id.newparticipant_name);
         try {
             erc.createParticipant(newParticipant.getText().toString());
         } catch (InvalidInputException e) {
@@ -201,6 +207,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void addEvent(View v) {
 
+        error = null;
         EventRegistrationController erc = new EventRegistrationController();
 
         TextView eventName = (TextView) findViewById(R.id.newevent_name);
@@ -225,7 +232,6 @@ public class MainActivity extends AppCompatActivity {
             error = "Start/End time not formatted correctly!";
         }
 
-        error = null;
         try {
             erc.createEvent(eventName.getText().toString(), date, start, end);
         } catch (InvalidInputException e) {
@@ -233,6 +239,4 @@ public class MainActivity extends AppCompatActivity {
         }
         refreshData();
     }
-
-
 }

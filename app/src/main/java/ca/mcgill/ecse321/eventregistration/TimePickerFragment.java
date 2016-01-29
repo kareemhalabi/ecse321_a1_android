@@ -10,8 +10,6 @@ import android.widget.TimePicker;
 public class TimePickerFragment extends DialogFragment
     implements TimePickerDialog.OnTimeSetListener {
 
-    String label;
-
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         int hour = 0;
